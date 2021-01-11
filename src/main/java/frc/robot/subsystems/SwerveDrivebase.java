@@ -164,11 +164,11 @@ public class SwerveDrivebase extends SubsystemBase {
                 // TODO: fix the inefficiency of these loops (gets worse over time)
                 while (angle - lastAngles[i][0] > Math.PI / 2) {
                     angle -= Math.PI;
-                    lastAngles[i][1] = -1;
+                    lastAngles[i][1] *= -1;
                 }
                 while (angle - lastAngles[i][0] < -Math.PI / 2) {
                     angle += Math.PI;
-                    lastAngles[i][1] = -1;
+                    lastAngles[i][1] *= -1;
                 }
                 lastAngles[i][0] = angle;
                 speed *= lastAngles[i][1]; // invert speed if necessary
