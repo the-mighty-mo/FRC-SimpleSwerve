@@ -161,6 +161,7 @@ public class SwerveDrivebase extends SubsystemBase {
                  * have to turn more than 90 degrees from its current position.
                  */
                 lastAngles[i][1] = 1;
+                // TODO: fix the inefficiency of these loops (gets worse over time)
                 while (angle - lastAngles[i][0] > Math.PI / 2) {
                     angle -= Math.PI;
                     lastAngles[i][1] = -1;
