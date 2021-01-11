@@ -72,7 +72,7 @@ public class SwerveDrivebase extends SubsystemBase {
             turnMotor.config_kD(0, 0);
 
             turnMotor.configMotionCruiseVelocity(1000);
-            turnMotor.configMotionAcceleration(5000);
+            turnMotor.configMotionAcceleration(10000);
             turnMotor.configMotionSCurveStrength(4);
         }
 
@@ -87,7 +87,7 @@ public class SwerveDrivebase extends SubsystemBase {
             PhysicsSim.getInstance().addTalonSRX(driveMotor, 0.5, 6800);
         }
         for (WPI_TalonSRX turnMotor : kTurnMotors) {
-            PhysicsSim.getInstance().addTalonSRX(turnMotor, 0.2, 2000);
+            PhysicsSim.getInstance().addTalonSRX(turnMotor, 0.1, 2000);
         }
     }
 
