@@ -243,8 +243,9 @@ public class SwerveDrivebase extends SubsystemBase {
 
         for (double[] turnVector : turnMatrix) {
             // convert turnVector into unit vector
-            turnVector[0] /= Num.distance(kBotLength, kBotWidth);
-            turnVector[1] /= Num.distance(kBotLength, kBotWidth);
+            double botMagnitude = Num.distance(kBotLength, kBotWidth);
+            turnVector[0] /= botMagnitude;
+            turnVector[1] /= botMagnitude;
             // multiply by scalar (turn)
             turnVector[0] *= turn;
             turnVector[1] *= turn;
