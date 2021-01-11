@@ -19,7 +19,7 @@ public class SwerveDrivebase extends SubsystemBase {
     private final WPI_TalonSRX[] kDriveMotors;
     // turn motors
     private final WPI_TalonSRX[] kTurnMotors;
-
+    // bot dimensions
     private final double kBotLength;
     private final double kBotWidth;
 
@@ -242,9 +242,9 @@ public class SwerveDrivebase extends SubsystemBase {
         turnMatrix[3][0] = -kBotLength;
         turnMatrix[3][1] = kBotWidth;
 
+        double botMagnitude = Num.distance(kBotLength, kBotWidth);
         for (double[] turnVector : turnMatrix) {
             // convert turnVector into unit vector
-            double botMagnitude = Num.distance(kBotLength, kBotWidth);
             turnVector[0] /= botMagnitude;
             turnVector[1] /= botMagnitude;
             // multiply by scalar (turn)
