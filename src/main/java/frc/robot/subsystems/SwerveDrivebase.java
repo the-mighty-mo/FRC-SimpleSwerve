@@ -155,7 +155,7 @@ public class SwerveDrivebase extends SubsystemBase {
                  * we need to optimize the angle. Theoretically, a wheel should never
                  * have to turn more than 90 degrees from its current position.
                  * 
-                 * The code below is equivalent to and more efficient than:
+                 * The code block below is equivalent to and more efficient than:
                  * while (angle - lastAngle[i] > Math.PI / 2) {
                  *     angle -= Math.PI;
                  *     speed *= -1;
@@ -165,18 +165,20 @@ public class SwerveDrivebase extends SubsystemBase {
                  *     speed *= -1;
                  * }
                  */
-                double angleDiff = angle - lastAngle[i];
-                // get how many half rotations we have to make to get within 90 degrees of lastAngle
-                // add signof(angleDiff) * Math.PI / 2 to angleDiff so we get within 90 degrees and not 180
-                int numHalfRotations = (int)((angleDiff + Math.signum(angleDiff) * Math.PI / 2) / Math.PI);
-                // subtract off that many half rotations
-                angle -= numHalfRotations * Math.PI;
-                if (numHalfRotations % 2 == 1) {
-                    // every half rotation, the wheel is flipped, so we need to flip speed
-                    // odd numbers of half rotations (% 2 == 1) results in a flipped speed
-                    speed *= -1;
+                {
+                    double angleDiff = angle - lastAngle[i];
+                    // get how many half rotations we have to make to get within 90 degrees of lastAngle
+                    // add signof(angleDiff) * Math.PI / 2 to angleDiff so we get within 90 degrees and not 180
+                    int numHalfRotations = (int)((angleDiff + Math.signum(angleDiff) * Math.PI / 2) / Math.PI);
+                    // subtract off that many half rotations
+                    angle -= numHalfRotations * Math.PI;
+                    if (numHalfRotations % 2 == 1) {
+                        // every half rotation, the wheel is flipped, so we need to flip speed
+                        // odd numbers of half rotations (% 2 == 1) results in a flipped speed
+                        speed *= -1;
+                    }
+                    lastAngle[i] = angle;
                 }
-                lastAngle[i] = angle;
                 
                 // set the turn motor
                 kTurnMotors[i].set(ControlMode.MotionMagic, Converter.radToEnc(angle, 4096));
