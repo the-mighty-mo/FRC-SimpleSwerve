@@ -1,0 +1,2 @@
+All files in this folder are property of Cross the Road Electronics and were pulled from their Motion Magic example:
+https://github.com/CrossTheRoadElec/Phoenix-Examples-Languages/tree/master/Java%20General/MotionMagic/src/main/java/frc/robot/sim
