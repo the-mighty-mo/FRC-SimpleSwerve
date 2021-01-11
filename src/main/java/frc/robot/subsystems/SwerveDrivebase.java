@@ -24,8 +24,8 @@ public class SwerveDrivebase extends SubsystemBase {
     private final double kBotLength;
     private final double kBotWidth;
 
-    private double[][] lastAngles = new double[4][2]; // 2 elements are angle and inverted (1 or -1)
-
+    private double[] lastAngle = new double[4];
+    
     /**
      * Manages a swerve drivebase.
      * 
@@ -74,11 +74,6 @@ public class SwerveDrivebase extends SubsystemBase {
             turnMotor.configMotionCruiseVelocity(1000);
             turnMotor.configMotionAcceleration(10000);
             turnMotor.configMotionSCurveStrength(4);
-        }
-
-        // Set the inverted portion to 1 by default
-        for (double[] lastAngle : lastAngles) {
-            lastAngle[1] = 1;
         }
     }
 
@@ -160,18 +155,16 @@ public class SwerveDrivebase extends SubsystemBase {
                  * we need to optimize the angle. Theoretically, a wheel should never
                  * have to turn more than 90 degrees from its current position.
                  */
-                lastAngles[i][1] = 1;
                 // TODO: fix the inefficiency of these loops (gets worse over time)
-                while (angle - lastAngles[i][0] > Math.PI / 2) {
+                while (angle - lastAngle[i] > Math.PI / 2) {
                     angle -= Math.PI;
-                    lastAngles[i][1] *= -1;
+                    speed *= -1;
                 }
-                while (angle - lastAngles[i][0] < -Math.PI / 2) {
+                while (angle - lastAngle[i] < -Math.PI / 2) {
                     angle += Math.PI;
-                    lastAngles[i][1] *= -1;
+                    speed *= -1;
                 }
-                lastAngles[i][0] = angle;
-                speed *= lastAngles[i][1]; // invert speed if necessary
+                lastAngle[i] = angle;
                 
                 // set the turn motor
                 kTurnMotors[i].set(ControlMode.MotionMagic, Converter.radToEnc(angle, 4096));
