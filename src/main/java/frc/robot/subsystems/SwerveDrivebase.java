@@ -182,6 +182,9 @@ public class SwerveDrivebase extends SubsystemBase {
                 // set the turn motor
                 kTurnMotors[i].set(ControlMode.MotionMagic, Converter.radToEnc(angle, 4096));
             }
+            else {
+                kTurnMotors[i].set(ControlMode.PercentOutput, 0);
+            }
             // set the drive motor
             kDriveMotors[i].set(ControlMode.PercentOutput, speed);
         }
