@@ -22,8 +22,6 @@ public class SwerveDrivebase extends SubsystemBase {
     // bot dimensions
     private final double kBotLength;
     private final double kBotWidth;
-
-    private double[] lastAngle = new double[4];
     
     /**
      * Manages a swerve drivebase.
@@ -170,28 +168,28 @@ public class SwerveDrivebase extends SubsystemBase {
                  * have to turn more than 90 degrees from its current position.
                  * 
                  * The code block below is equivalent to and more efficient than:
-                 * while (angle - lastAngle[i] > Math.PI / 2) {
+                 * while (angle - currentAngle > Math.PI / 2) {
                  *     angle -= Math.PI;
                  *     speed *= -1;
                  * }
-                 * while (angle - lastAngle[i] < -Math.PI / 2) {
+                 * while (angle - currentAngle < -Math.PI / 2) {
                  *     angle += Math.PI;
                  *     speed *= -1;
                  * }
                  */
                 {
-                    double angleDiff = angle - lastAngle[i];
-                    // get how many half rotations we have to make to get within 90 degrees of lastAngle
+                    double currentAngle = Converter.encToRad(kTurnMotors[i].getSelectedSensorPosition(), 4096);
+                    double angleDiff = angle - currentAngle;
+                    // get how many half rotations we have to make to get within 90 degrees of currentAngle
                     // add signof(angleDiff) * Math.PI / 2 to angleDiff so we get within 90 degrees and not 180
                     int numHalfRotations = (int)((angleDiff + Math.signum(angleDiff) * Math.PI / 2) / Math.PI);
                     // subtract off that many half rotations
                     angle -= numHalfRotations * Math.PI;
-                    if (numHalfRotations % 2 == 1) {
+                    if (Math.abs(numHalfRotations) % 2 == 1) { // abs on numHalfRotations so the modulus result is positive
                         // every half rotation, the wheel is flipped, so we need to flip speed
                         // odd numbers of half rotations (% 2 == 1) results in a flipped speed
                         speed *= -1;
                     }
-                    lastAngle[i] = angle;
                 }
                 
                 // set the turn motor
@@ -302,9 +300,6 @@ public class SwerveDrivebase extends SubsystemBase {
     public void initTurnEncoders() {
         for (WPI_TalonSRX turnMotor : kTurnMotors) {
             turnMotor.setSelectedSensorPosition(0);
-        }
-        for (int i = 0; i < lastAngle.length; i++) {
-            lastAngle[i] = 0;
         }
     }
 }
