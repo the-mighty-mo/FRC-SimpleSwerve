@@ -54,26 +54,41 @@ public class SwerveDrivebase extends SubsystemBase {
         this.kDriveMotors = new WPI_TalonSRX[] { frontLeft, frontRight, backRight, backLeft };
         this.kTurnMotors = new WPI_TalonSRX[] { frontLeftTurn, frontRightTurn, backRightTurn, backLeftTurn };
 
-        // Configure motors
+        // Configure drive motors
         for (WPI_TalonSRX driveMotor : kDriveMotors) {
             driveMotor.configFactoryDefault();
             driveMotor.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder);
         }
+        // Configure turn motors
         for (WPI_TalonSRX turnMotor : kTurnMotors) {
             turnMotor.configFactoryDefault();
             turnMotor.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder);
 
             // config Motion Magic
             turnMotor.selectProfileSlot(0, 0);
-            turnMotor.config_kF(0, 1023.0 / 2000); // 2000 is the motor's max velocity
+            turnMotor.config_kF(0, 1023.0 / 1000); // 1000 is the motor's max velocity
             turnMotor.config_kP(0, 0.2);
             turnMotor.config_kI(0, 0);
             turnMotor.config_kD(0, 0);
 
-            turnMotor.configMotionCruiseVelocity(1000);
-            turnMotor.configMotionAcceleration(10000);
+            turnMotor.configMotionCruiseVelocity(800); // around 80% of the max velocity
+            turnMotor.configMotionAcceleration(8000); // around 5-10x the cruise velocity
             turnMotor.configMotionSCurveStrength(4);
         }
+
+        // unique motor settings
+        frontLeft.setSensorPhase(false);
+        frontRight.setSensorPhase(false);
+        backLeft.setSensorPhase(false);
+        backRight.setSensorPhase(false);
+
+        frontRight.setInverted(true); // right is inverted from left
+        backRight.setInverted(true);
+        
+        frontLeftTurn.setSensorPhase(false);
+        frontRightTurn.setSensorPhase(false);
+        backLeftTurn.setSensorPhase(false);
+        backRightTurn.setSensorPhase(false);
     }
 
     public void simulationInit() {
@@ -81,7 +96,7 @@ public class SwerveDrivebase extends SubsystemBase {
             PhysicsSim.getInstance().addTalonSRX(driveMotor, 0.5, 6800);
         }
         for (WPI_TalonSRX turnMotor : kTurnMotors) {
-            PhysicsSim.getInstance().addTalonSRX(turnMotor, 0.1, 2000);
+            PhysicsSim.getInstance().addTalonSRX(turnMotor, 0.1, 1000);
         }
     }
 
@@ -96,7 +111,7 @@ public class SwerveDrivebase extends SubsystemBase {
      *        turn speed from -1.0 (left) to 1.0 (right)
      */
     public void set(double speed, double strafe, double turn) {
-        // NOTE: matrix starts with the leftMaster and goes clockwise
+        // NOTE: matrix starts with the front left motor and goes clockwise
         double[][] wheelMatrix = getStrafeMatrix(speed, strafe);
 
         // need to keep track of the max magnitude of the wheel vectors
@@ -287,6 +302,9 @@ public class SwerveDrivebase extends SubsystemBase {
     public void initTurnEncoders() {
         for (WPI_TalonSRX turnMotor : kTurnMotors) {
             turnMotor.setSelectedSensorPosition(0);
+        }
+        for (int i = 0; i < lastAngle.length; i++) {
+            lastAngle[i] = 0;
         }
     }
 }
