@@ -4,7 +4,7 @@ import com.ctre.phoenix.motorcontrol.*;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import org.team217.*;
-import org.team217.ctre.WPI_TalonSRX;
+import org.team217.ctre.*;
 
 import frc.robot.Constants;
 import frc.robot.sim.PhysicsSim;
@@ -22,7 +22,9 @@ public class SwerveDrivebase extends SubsystemBase {
     // bot dimensions
     private final double kBotLength;
     private final double kBotWidth;
-    
+    // pigeon (gyro)
+    private final PigeonIMU kPigeon;
+
     /**
      * Manages a swerve drivebase.
      * 
@@ -36,6 +38,8 @@ public class SwerveDrivebase extends SubsystemBase {
     public SwerveDrivebase(double botLength, double botWidth) {
         this.kBotLength = botLength;
         this.kBotWidth = botWidth;
+
+        this.kPigeon = new PigeonIMU(0);
 
         // Create motors
         WPI_TalonSRX frontLeft = new WPI_TalonSRX(Constants.kFrontLeftID);
@@ -96,6 +100,36 @@ public class SwerveDrivebase extends SubsystemBase {
         for (WPI_TalonSRX turnMotor : kTurnMotors) {
             PhysicsSim.getInstance().addTalonSRX(turnMotor, 0.1, 1000);
         }
+    }
+
+    /**
+     * Calculates and runs swerve drive with optional field sense.
+     * 
+     * @param speed
+     *        forward speed from -1.0 (backward) to 1.0 (forward)
+     * @param strafe
+     *        strafe speed from -1.0 (left) to 1.0 (right)
+     * @param turn
+     *        turn speed from -1.0 (left) to 1.0 (right)
+     * @param isFieldSense
+     *        {@code true} if forward should be relative to the field (pigeon angle of 0)
+     */
+    public void set(double speed, double strafe, double turn, boolean isFieldSense) {
+        double _speed = speed;
+        double _strafe = strafe;
+
+        if (isFieldSense) {
+            /*
+             * NOTE: If the pigeon angle and the wheel angles increase turning in
+             * opposite directions (such as the pigeon angle increasing when turning
+             * right but the wheel angles increasing when turning left), multiply
+             * pigeonAngle by -1 here.
+             */
+            double pigeonAngle = Math.toRadians(kPigeon.getAngle());
+            _strafe = strafe * Math.cos(pigeonAngle) - speed * Math.sin(pigeonAngle);
+            _speed = speed * Math.cos(pigeonAngle) + strafe * Math.sin(pigeonAngle);
+        }
+        set(_speed, _strafe, turn);
     }
 
     /**
@@ -301,5 +335,12 @@ public class SwerveDrivebase extends SubsystemBase {
         for (WPI_TalonSRX turnMotor : kTurnMotors) {
             turnMotor.setSelectedSensorPosition(0);
         }
+    }
+
+    /**
+     * Resets the angle of the PigeonIMU to 0.
+     */
+    public void resetPigeon() {
+        kPigeon.reset();
     }
 }
