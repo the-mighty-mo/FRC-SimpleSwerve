@@ -61,6 +61,17 @@ public class SwerveDrivebase extends SubsystemBase {
         for (WPI_TalonSRX driveMotor : kDriveMotors) {
             driveMotor.configFactoryDefault();
             driveMotor.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder);
+
+            // config Motion Magic
+            driveMotor.selectProfileSlot(0, 0);
+            driveMotor.config_kF(0, 1023.0 / 6800); // 1680 is the motor's max velocity
+            driveMotor.config_kP(0, 0.2);
+            driveMotor.config_kI(0, 0);
+            driveMotor.config_kD(0, 0);
+
+            driveMotor.configMotionCruiseVelocity(5500); // around 80% of the max velocity
+            driveMotor.configMotionAcceleration(5500 / 0.5); // 0.5 sec acceleration time
+            driveMotor.configMotionSCurveStrength(4);
         }
         // Configure turn motors
         for (WPI_TalonSRX turnMotor : kTurnMotors) {
@@ -323,6 +334,45 @@ public class SwerveDrivebase extends SubsystemBase {
         // odd numbers of half rotations (% 2 == 1) results in a flipped speed
         boolean flipDir = Math.abs(numHalfRotations) % 2 == 1; // abs on numHalfRotations so the modulus result is positive
         return new Pair<Double, Boolean>(targetAngle, flipDir);
+    }
+
+    /**
+     * Drives a distance at a given angle with field sense.
+     * 
+     * @param distance
+     *        The distance to travel, in encoder ticks
+     * @param direction
+     *        The direction to travel, in degrees, relative to the field (pigeon angle of 0)
+     */
+    public void autonDrive(double distance, double direction) {
+        /*
+         * NOTE: If the pigeon angle and the wheel angles increase turning in
+         * opposite directions (such as the pigeon angle increasing when turning
+         * right but the wheel angles increasing when turning left), multiply
+         * direction by -1 here.
+         */
+        double angle = direction - kPigeon.getAngle();
+        for (int i = 0; i < kTurnMotors.length; i++) {
+            // calculate angle
+            // NOTE: 0 rad is up, increases going clockwise, so x and y are flipped
+            double wheelAngle = angle;
+            double wheelDistance = distance;
+
+            {
+                // optimize the swerve angle
+                double currentAngle = Converter.encToRad(kTurnMotors[i].getSelectedSensorPosition(), 4096);
+                Pair<Double, Boolean> optimizedAngle = optimizeSwerve(wheelAngle, currentAngle);
+                angle = optimizedAngle.getFirst();
+                if (optimizedAngle.getSecond()) {
+                    wheelDistance *= -1;
+                }
+            }
+            
+            // set the turn motor
+            kTurnMotors[i].set(ControlMode.MotionMagic, Converter.radToEnc(wheelAngle, 4096));
+            // set the drive motor
+            kDriveMotors[i].set(ControlMode.MotionMagic, wheelDistance);
+        }
     }
 
     /**
