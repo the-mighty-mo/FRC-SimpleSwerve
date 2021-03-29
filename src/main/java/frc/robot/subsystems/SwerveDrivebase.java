@@ -2,6 +2,7 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix.motorcontrol.*;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpiutil.math.Pair;
 
 import org.team217.*;
 import org.team217.ctre.*;
@@ -195,33 +196,12 @@ public class SwerveDrivebase extends SubsystemBase {
                 // calculate angle
                 // NOTE: 0 rad is up, increases going clockwise, so x and y are flipped
                 double angle = Math.atan2(wheelMatrix[i][0], wheelMatrix[i][1]);
-    
-                /*
-                 * We want to make it so the wheels turn as little as possible, so
-                 * we need to optimize the angle. Theoretically, a wheel should never
-                 * have to turn more than 90 degrees from its current position.
-                 * 
-                 * The code block below is equivalent to and more efficient than:
-                 * while (angle - currentAngle > Math.PI / 2) {
-                 *     angle -= Math.PI;
-                 *     speed *= -1;
-                 * }
-                 * while (angle - currentAngle < -Math.PI / 2) {
-                 *     angle += Math.PI;
-                 *     speed *= -1;
-                 * }
-                 */
                 {
+                    // optimize the swerve angle
                     double currentAngle = Converter.encToRad(kTurnMotors[i].getSelectedSensorPosition(), 4096);
-                    double angleDiff = angle - currentAngle;
-                    // get how many half rotations we have to make to get within 90 degrees of currentAngle
-                    // add signof(angleDiff) * Math.PI / 2 to angleDiff so we get within 90 degrees and not 180
-                    int numHalfRotations = (int)((angleDiff + Math.signum(angleDiff) * Math.PI / 2) / Math.PI);
-                    // subtract off that many half rotations
-                    angle -= numHalfRotations * Math.PI;
-                    if (Math.abs(numHalfRotations) % 2 == 1) { // abs on numHalfRotations so the modulus result is positive
-                        // every half rotation, the wheel is flipped, so we need to flip speed
-                        // odd numbers of half rotations (% 2 == 1) results in a flipped speed
+                    Pair<Double, Boolean> optimizedAngle = optimizeSwerve(angle, currentAngle);
+                    angle = optimizedAngle.getFirst();
+                    if (optimizedAngle.getSecond()) {
                         speed *= -1;
                     }
                 }
@@ -303,6 +283,46 @@ public class SwerveDrivebase extends SubsystemBase {
         }
         
         return turnMatrix;
+    }
+
+    /**
+     * Optimizes swerve wheel angles.
+     * 
+     * We want to make it so the wheels turn as little as possible.
+     * Theoretically, a wheel should never have to turn more than 90
+     * degrees from its current position. This method enforces that rule.
+     * 
+     * @param targetAngle
+     *        The target wheel angle
+     * @param currentAngle
+     *        The current wheel angle
+     * @return
+     *        The optimized target wheel angle, and whether or not
+     *        to flip the direction of the drive motor
+     */
+    public Pair<Double, Boolean> optimizeSwerve(double targetAngle, double currentAngle) {
+        /* 
+         * The code block below is equivalent to and more efficient than:
+         * while (angle - currentAngle > Math.PI / 2) {
+         *     angle -= Math.PI;
+         *     speed *= -1;
+         * }
+         * while (angle - currentAngle < -Math.PI / 2) {
+         *     angle += Math.PI;
+         *     speed *= -1;
+         * }
+         */
+        double angleDiff = targetAngle - currentAngle;
+        // get how many half rotations we have to make to get within 90 degrees of currentAngle
+        // add signof(angleDiff) * Math.PI / 2 to angleDiff so we get within 90 degrees and not 180
+        int numHalfRotations = (int)((angleDiff + Math.signum(angleDiff) * Math.PI / 2) / Math.PI);
+        // subtract off that many half rotations
+        targetAngle -= numHalfRotations * Math.PI;
+
+        // every half rotation, the wheel is flipped, so we need to flip speed
+        // odd numbers of half rotations (% 2 == 1) results in a flipped speed
+        boolean flipDir = Math.abs(numHalfRotations) % 2 == 1; // abs on numHalfRotations so the modulus result is positive
+        return new Pair<Double, Boolean>(targetAngle, flipDir);
     }
 
     /**
