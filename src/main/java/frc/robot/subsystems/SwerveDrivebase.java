@@ -20,11 +20,12 @@ public class SwerveDrivebase extends SubsystemBase {
     private final WPI_TalonSRX[] kDriveMotors;
     // turn motors
     private final WPI_TalonSRX[] kTurnMotors;
+    // pigeon (gyro)
+    private final PigeonIMU kPigeon;
+
     // bot dimensions
     private final double kBotLength;
     private final double kBotWidth;
-    // pigeon (gyro)
-    private final PigeonIMU kPigeon;
 
     /**
      * Manages a swerve drivebase.
@@ -308,8 +309,8 @@ public class SwerveDrivebase extends SubsystemBase {
      * @param currentAngle
      *        The current wheel angle
      * @return
-     *        The optimized target wheel angle, and whether or not
-     *        to flip the direction of the drive motor
+     *        The optimized target wheel angle, and whether to flip
+     *        the direction of the drive motor
      */
     public Pair<Double, Boolean> optimizeSwerve(double targetAngle, double currentAngle) {
         /* 
@@ -353,8 +354,7 @@ public class SwerveDrivebase extends SubsystemBase {
          */
         double angle = direction - kPigeon.getAngle();
         for (int i = 0; i < kTurnMotors.length; i++) {
-            // calculate angle
-            // NOTE: 0 rad is up, increases going clockwise, so x and y are flipped
+            // NOTE: 0 rad is up, increases going clockwise
             double wheelAngle = angle;
             double wheelDistance = distance;
 
@@ -362,7 +362,7 @@ public class SwerveDrivebase extends SubsystemBase {
                 // optimize the swerve angle
                 double currentAngle = Converter.encToRad(kTurnMotors[i].getSelectedSensorPosition(), 4096);
                 Pair<Double, Boolean> optimizedAngle = optimizeSwerve(wheelAngle, currentAngle);
-                angle = optimizedAngle.getFirst();
+                wheelAngle = optimizedAngle.getFirst();
                 if (optimizedAngle.getSecond()) {
                     wheelDistance *= -1;
                 }
@@ -373,6 +373,39 @@ public class SwerveDrivebase extends SubsystemBase {
             // set the drive motor
             kDriveMotors[i].set(ControlMode.MotionMagic, wheelDistance);
         }
+    }
+
+    /**
+     * Returns if the drive motors have reached their target in strafe mode.
+     * 
+     * @param distance
+     *        The distance to travel, in encoder ticks
+     * @param direction
+     *        The direction to travel, in degrees, relative to the field (pigeon angle of 0)
+     * @param error
+     *        The error allowed for the target to still be considered to be reached
+     */
+    public boolean hasReachedTarget(double distance, double direction, double error) {
+        boolean hasReachedTarget = true;
+
+        double angle = direction - kPigeon.getAngle();
+        // loop until end of array or target is reached
+        for (int i = 0; i < kTurnMotors.length && hasReachedTarget; i++) {
+            // need to get if the direction is flipped
+            double wheelDistance = distance;
+            {
+                // optimize the swerve angle
+                double currentAngle = Converter.encToRad(kTurnMotors[i].getSelectedSensorPosition(), 4096);
+                Pair<Double, Boolean> optimizedAngle = optimizeSwerve(angle, currentAngle);
+                if (optimizedAngle.getSecond()) {
+                    wheelDistance *= -1;
+                }
+            }
+            // check if the drive motor has reached its target within the given error
+            hasReachedTarget &= Num.isWithinTarget(kDriveMotors[i].getSelectedSensorPosition(), wheelDistance, error);
+        }
+
+        return hasReachedTarget;
     }
 
     /**

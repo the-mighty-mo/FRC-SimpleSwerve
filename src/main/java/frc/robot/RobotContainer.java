@@ -11,7 +11,7 @@ public class RobotContainer {
     public final Joystick kDriver = new Joystick(Constants.kDriverPort);
 
     // Subsystems
-    public final SwerveDrivebase kSwerveDrivebase = new SwerveDrivebase(31.0, 20.0);
+    public final SwerveDrivebase kSwerveDrivebase = new SwerveDrivebase(28.0, 22.0);
 
     public Command getTeleopCommand() {
         return new TeleopDrive(kSwerveDrivebase, kDriver);

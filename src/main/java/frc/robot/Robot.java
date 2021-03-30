@@ -44,6 +44,7 @@ public class Robot extends TimedRobot {
     @Override
     public void autonomousInit() {
         kRobotContainer.kSwerveDrivebase.initTurnEncoders();
+        kRobotContainer.kSwerveDrivebase.resetPigeon();
     }
 
     @Override
