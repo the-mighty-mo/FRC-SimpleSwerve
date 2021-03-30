@@ -312,7 +312,7 @@ public class SwerveDrivebase extends SubsystemBase {
      *        The optimized target wheel angle, and whether to flip
      *        the direction of the drive motor
      */
-    public Pair<Double, Boolean> optimizeSwerve(double targetAngle, double currentAngle) {
+    private Pair<Double, Boolean> optimizeSwerve(double targetAngle, double currentAngle) {
         /* 
          * The code block below is equivalent to and more efficient than:
          * while (angle - currentAngle > Math.PI / 2) {
@@ -332,8 +332,8 @@ public class SwerveDrivebase extends SubsystemBase {
         targetAngle -= numHalfRotations * Math.PI;
 
         // every half rotation, the wheel is flipped, so we need to flip speed
-        // odd numbers of half rotations (% 2 == 1) results in a flipped speed
-        boolean flipDir = Math.abs(numHalfRotations) % 2 == 1; // abs on numHalfRotations so the modulus result is positive
+        // odd numbers of half rotations (% 2 != 0) results in a flipped speed
+        boolean flipDir = numHalfRotations % 2 != 0;
         return new Pair<Double, Boolean>(targetAngle, flipDir);
     }
 
