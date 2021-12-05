@@ -2,7 +2,7 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix.motorcontrol.*;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpiutil.math.Pair;
+import edu.wpi.first.math.Pair;
 
 import org.team217.*;
 import org.team217.ctre.*;
