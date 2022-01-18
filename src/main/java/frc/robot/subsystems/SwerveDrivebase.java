@@ -21,7 +21,7 @@ public class SwerveDrivebase extends SubsystemBase {
     // turn motors
     private final WPI_TalonSRX[] kTurnMotors;
     // pigeon (gyro)
-    private final PigeonIMU kPigeon;
+    private final WPI_PigeonIMU kPigeon;
 
     // bot dimensions
     private final double kBotLength;
@@ -41,7 +41,7 @@ public class SwerveDrivebase extends SubsystemBase {
         this.kBotLength = botLength;
         this.kBotWidth = botWidth;
 
-        this.kPigeon = new PigeonIMU(0);
+        this.kPigeon = new WPI_PigeonIMU(0);
 
         // Create motors
         WPI_TalonSRX frontLeft = new WPI_TalonSRX(Constants.kFrontLeftID);
